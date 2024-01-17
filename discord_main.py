@@ -48,24 +48,12 @@ async def assign_roles(message):
     print("Assigning roles...")
 
     languages = set(re.findall("python|javascript|rust|go|c\+\+|java", message.content, re.IGNORECASE))
-    language_emojis = set(re.findall("\U0001F40D|\U0001F578|\U0001F980|\U0001F439|\U0001F409", message.content))
-    # https://unicode.org/emoji/charts/full-emoji-list.html
 
-    # Convert emojis to names
-    for emoji in language_emojis:
-        {
-            "\U0001F40D": lambda: languages.add("python"),
-            "\U0001F578": lambda: languages.add("javascript"),
-            "\U0001F980": lambda: languages.add("rust"),
-            "\U0001F439": lambda: languages.add("go"),
-            "\U0001F409": lambda: languages.add("c++")
-        }[emoji]()
     
     if languages:
         server = client.get_guild(SERVER_ID)
-        roles = [get(server.roles, name="Python")]
+        roles = [get(server.roles, name=message.content)]
         member = await server.fetch_member(message.author.id)
-        print("\n\n",type(get(server.roles, name="Python")),"\n\n")
     else:
         await message.channel.send("No supported languages were found in your message.")
 
@@ -101,13 +89,15 @@ async def dm_about_roles(member: Member):
 
 Which of these languages do you use:
 
-* Python (🐍)
-* JavaScript (🕸️)
-* Rust (🦀)
-* Go (🐹)
-* C++ (🐉)
+* Python
+* C
+* JavaScript
+* Rust 
+* Go
+* Java
+* C++
 
-Reply to this message with one or more of the language names or emojis above so I can assign you the right roles on our server.
+Reply to this message with the language names above so I can assign you the right roles on our server.
 """
     )
 
