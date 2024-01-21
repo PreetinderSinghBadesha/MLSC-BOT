@@ -37,7 +37,7 @@ Example: /assign_role Python
         if requestedRoles:
             server = inter.guild
             print(f"before: {server.roles}")
-            roles = [get(server.roles, name="Python") for server.name in server.roles]
+            roles = [get(server.roles, name="Go")]
             
             # member = await server.fetch_member(message.author.id)
 

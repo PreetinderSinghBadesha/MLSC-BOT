@@ -3,7 +3,10 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from os import getenv
 
-exts =  ["cogs.welcomer","cogs.role_manager","cogs.admin_commands"]
+exts =  ["cogs.welcomer",
+        "cogs.role_manager", 
+        "cogs.admin_commands",
+        "cogs.team_manager"]
 
 class MlscBot(commands.Bot):
   def __init__(self, command_prefix: str, intents: Intents, **kwargs):
