@@ -1,8 +1,18 @@
-from discord import Interaction, app_commands, PermissionOverwrite, Color, Member
+from typing import Any, Optional
+from discord import Interaction, app_commands, PermissionOverwrite, Color, Member, Forbidden, Button, ButtonStyle, SelectOption
 from discord.utils import get
 from discord.ext import commands
 from bot import MlscBot
+from discord.ui import View, Select, button
 
+
+members_that_need_teams = {
+            "Appdev" : ["Preet"],
+            "Webdev" : [],
+            "Design" : [],
+            "ML/AI" : [],
+            "Backend" : [],
+            }
 class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
         self.bot = bot
@@ -40,25 +50,107 @@ class TeamManager(commands.Cog):
 
             except Exception as e:
                 print(e)
+                await inter.response.send_message("You don't have permission to create teams.")
 
         else:
             inter.response.send_message("Enter team name", ephemeral=True)     
 
     @app_commands.command()
-    async def delete_team(self, inter: Interaction, team_name: str):
-        if team_name:
+    async def join_team_member(self, inter: Interaction, team_name: str, member: Member):
+        author = inter.user
+        guild = inter.guild
+        team_leader = get(guild.roles, name="Team Leader")
+        role_to_assign = get(guild.roles, name=f"{team_name} Team")
+
+        button_prompt = ButtonPrompt(team_name=team_name)
+
+        if role_to_assign in author.roles and team_leader in author.roles:
             try:
-                team_voice_channel = f"{team_name}'s Voice channel"
-                for channel in inter.channel.guild.channels:
-                    if channel.name == team_voice_channel:
-                        channel.delete()
-                print(f"{inter.user.name} Deleted {team_voice_channel} channel for team {team_name} .....")
-                await inter.response.send_message(f"{team_name}'s Voice channel Deleted", ephemeral=True)
-            
-            except Exception as e:
-                print(e)
+                await inter.response.send_message(f"Invitation send to {member.mention}")
+                await member.send(f"Do you want to join team {team_name}.", view=button_prompt)
+                await button_prompt.wait()
+
+                #when invite is accepted
+                if button_prompt.value == True:
+                    await member.add_roles(role_to_assign)
+                    await member.send(f"You have accepted invitation from Team {team_name}.")
+                    await author.send(f"{member.mention} have accepted your invitation to {team_name}.")
+
+                #when invite is rejected
+                elif button_prompt.value == False:
+                    await member.send(f"You have rejected invitation from Team {team_name}.")
+                    await author.send(f"{member.mention} have rejected your invitation to {team_name}.")
+                    
+            except Forbidden:
+                await inter.response.send_message(f"{author.mention} don't have the permissions to assign roles.", ephemeral=True)
+
         else:
-            inter.response.send_message("Enter team name", ephemeral=True)
+            await inter.response.send_message(f"{author.mention} can't use teamname of other teams", ephemeral=True)
+
+    @app_commands.command()
+    async def find_team(self, inter: Interaction):
+        dropdown = Dropdown()
+        view = DropdownView(dropdown)
+        
+        try:
+            await inter.response.send_message("Select your interest:", view=view, ephemeral=True)
+        
+        except IndexError:
+            print("list Index error is happening ....")
+
+class ButtonPrompt(View):
+    def __init__(self, team_name:str):
+        super().__init__(timeout=60)
+        self.value = None
+        self.team_name = team_name
+
+    #Invitation Accept button
+    @button(label="Yes", style=ButtonStyle.success)
+    async def yes(self, inter: Interaction, button: Button):
+        self.value = True
+        button.disabled = True
+        await inter.response.defer()
+        self.stop()
+
+    #Invitation Rejection button
+    @button(label="No", style=ButtonStyle.danger)
+    async def no(self, inter:Interaction, button: Button):
+        self.value = False
+        button.disabled = True
+        await inter.response.defer()
+        self.stop()    
+
+class Dropdown(Select):
+    def __init__(self):
+        options = {
+            SelectOption(
+                label="App dev", description="description", emoji="📱", value="Appdev"
+            ),
+            SelectOption(
+                label="Web Dev", description="description", emoji="🕸️", value="Webdev"
+            ),
+            SelectOption(
+                label="ML/Ai", description="description", emoji="🤖", value="ML/AI"
+            ),
+            SelectOption(
+                label="Design", description="description", emoji="🖼️", value="Design"
+            ),
+            SelectOption(
+                label="Backend", description="description", emoji="⚙️", value="Backend"
+            ),
+        }
+
+        super().__init__(placeholder="Select :", options=options)
+    
+    async def callback(self, inter: Interaction): 
+        members_that_need_teams[self.values[0]].append("Name")
+        print(members_that_need_teams[self.values[0]])
+        await inter.response.send_message(f"You have selected {self.values[0]}", ephemeral=True)
+
+class DropdownView(View):
+    def __init__(self, dropdown: Select):
+        super().__init__(timeout=60)
+        self.add_item(dropdown)    
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TeamManager(bot))

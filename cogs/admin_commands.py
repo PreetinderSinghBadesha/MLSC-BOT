@@ -1,4 +1,4 @@
-from discord import Interaction, app_commands, Member
+from discord import Interaction, app_commands
 from discord.ext import commands
 from bot import MlscBot
 
