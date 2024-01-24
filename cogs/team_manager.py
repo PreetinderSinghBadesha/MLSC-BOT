@@ -1,5 +1,4 @@
-from typing import Any, Optional
-from discord import Interaction, app_commands, PermissionOverwrite, Color, Member, Forbidden, Button, ButtonStyle, SelectOption
+from discord import Interaction, app_commands, PermissionOverwrite, Color, Member, Forbidden, Button, ButtonStyle, SelectOption, Embed
 from discord.utils import get
 from discord.ext import commands
 from bot import MlscBot
@@ -7,12 +6,13 @@ from discord.ui import View, Select, button
 
 
 members_that_need_teams = {
-            "Appdev" : ["Preet"],
-            "Webdev" : [],
-            "Design" : [],
-            "ML/AI" : [],
-            "Backend" : [],
+            "Appdev" : ["Preet", "Josh", "King"],
+            "Webdev" : ["Mudit", "Sham", "Tim"],
+            "Design" : ["Name 1", "Name 2", "Name 3"],
+            "ML/AI" : ["Bro 1", "Bro 2", "Bro 3"],
+            "Backend" : ["Lol 1", "Lol 2", "Lol 3"],
             }
+
 class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
         self.bot = bot
@@ -32,9 +32,10 @@ class TeamManager(commands.Cog):
         if team_name:
             try:
                 #Create role for team
-                await guild.create_role(name=f"{team_name} Team", colour=Color.from_rgb(0, 31, 63))
-                print(f"{author.name} Created role '{team_name} Team'")
-                team_role = get(guild.roles, name=f"{team_name} Team")
+                await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
+                print(f"{author.name} Created role 'Team {team_name}'")
+                team_role = get(guild.roles, name=f"Team {team_name}")
+                admin = get(guild.roles, name=f"Team {team_name}")
 
                 print(team_role)
                 
@@ -42,8 +43,9 @@ class TeamManager(commands.Cog):
                 await author.add_roles(team_role)
                 await author.add_roles(team_leader)
 
-                #Create voice channel for team
                 overwrites[team_role] = PermissionOverwrite(connect=True)
+
+                #Create voice channel for team
                 team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
                 print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
                 await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
@@ -53,14 +55,14 @@ class TeamManager(commands.Cog):
                 await inter.response.send_message("You don't have permission to create teams.")
 
         else:
-            inter.response.send_message("Enter team name", ephemeral=True)     
+            inter.response.send_message("Enter team name", ephemeral=True) 
 
     @app_commands.command()
     async def join_team_member(self, inter: Interaction, team_name: str, member: Member):
         author = inter.user
         guild = inter.guild
         team_leader = get(guild.roles, name="Team Leader")
-        role_to_assign = get(guild.roles, name=f"{team_name} Team")
+        role_to_assign = get(guild.roles, name=f"Team {team_name}")
 
         button_prompt = ButtonPrompt(team_name=team_name)
 
@@ -89,7 +91,7 @@ class TeamManager(commands.Cog):
 
     @app_commands.command()
     async def find_team(self, inter: Interaction):
-        dropdown = Dropdown()
+        dropdown = TeamDropdown()
         view = DropdownView(dropdown)
         
         try:
@@ -97,6 +99,18 @@ class TeamManager(commands.Cog):
         
         except IndexError:
             print("list Index error is happening ....")
+        
+    @app_commands.command()
+    async def find_member(self, inter: Interaction):
+        dropdown = MemberDropdown()
+        view = DropdownView(dropdown)
+
+        try:
+            await inter.response.send_message("Select your Member dev:", view=view, ephemeral=True)
+        
+        except IndexError:
+            print("list Index error is happening ....")
+
 
 class ButtonPrompt(View):
     def __init__(self, team_name:str):
@@ -118,9 +132,39 @@ class ButtonPrompt(View):
         self.value = False
         button.disabled = True
         await inter.response.defer()
-        self.stop()    
+        self.stop()
 
-class Dropdown(Select):
+class MemberDropdown(Select):
+    def __init__(self):
+        options = {
+            SelectOption(
+                label="App dev", description="description", emoji="📱", value="Appdev"
+            ),
+            SelectOption(
+                label="Web Dev", description="description", emoji="🕸️", value="Webdev"
+            ),
+            SelectOption(
+                label="ML/Ai", description="description", emoji="🤖", value="ML/AI"
+            ),
+            SelectOption(
+                label="Design", description="description", emoji="🖼️", value="Design"
+            ),
+            SelectOption(
+                label="Backend", description="description", emoji="⚙️", value="Backend"
+            ),
+        }
+
+        super().__init__(placeholder="Select :", options=options)
+    
+    async def callback(self, inter: Interaction):
+        member_list_embed = Embed(title="Members for available", color=0x00FFB3)
+        member_list = members_that_need_teams[self.values[0]]
+        for member in member_list:
+            member_list_embed.add_field(name=member, value="Value", inline=False)
+
+        await inter.response.send_message(embed=member_list_embed)
+
+class TeamDropdown(Select):
     def __init__(self):
         options = {
             SelectOption(
@@ -150,7 +194,8 @@ class Dropdown(Select):
 class DropdownView(View):
     def __init__(self, dropdown: Select):
         super().__init__(timeout=60)
-        self.add_item(dropdown)    
+        self.add_item(dropdown) 
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TeamManager(bot))
