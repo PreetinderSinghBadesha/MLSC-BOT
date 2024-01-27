@@ -1,17 +1,17 @@
 from discord import Interaction, app_commands, PermissionOverwrite, Color, Member, Forbidden, Button, ButtonStyle, SelectOption, Embed
 from discord.utils import get
+from os import getenv
 from discord.ext import commands
 from bot import MlscBot
 from discord.ui import View, Select, button
+from firebase_admin import credentials, initialize_app, db
+import json
+from firebase import firebase
 
-
-members_that_need_teams = {
-            "Appdev" : ["Preet", "Josh", "King"],
-            "Webdev" : ["Mudit", "Sham", "Tim"],
-            "Design" : ["Name 1", "Name 2", "Name 3"],
-            "ML/AI" : ["Bro 1", "Bro 2", "Bro 3"],
-            "Backend" : ["Lol 1", "Lol 2", "Lol 3"],
-            }
+firebase = firebase.FirebaseApplication(getenv('database'), None)
+member = firebase.get('/member-dev', None)
+print(member['app-dev'])
+print(member['app-dev']['name'])
 
 class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
@@ -68,6 +68,8 @@ class TeamManager(commands.Cog):
 
         if role_to_assign in author.roles and team_leader in author.roles:
             try:
+                #remove username from database after this command is runned ..........
+
                 await inter.response.send_message(f"Invitation send to {member.mention}")
                 await member.send(f"Do you want to join team {team_name}.", view=button_prompt)
                 await button_prompt.wait()
@@ -106,6 +108,7 @@ class TeamManager(commands.Cog):
         view = DropdownView(dropdown)
 
         try:
+            # Show username to command executer from database........
             await inter.response.send_message("Select your Member dev:", view=view, ephemeral=True)
         
         except IndexError:
@@ -158,9 +161,10 @@ class MemberDropdown(Select):
     
     async def callback(self, inter: Interaction):
         member_list_embed = Embed(title="Members for available", color=0x00FFB3)
-        member_list = members_that_need_teams[self.values[0]]
-        for member in member_list:
-            member_list_embed.add_field(name=member, value="Value", inline=False)
+        
+        # member_list = members_that_need_teams[self.values[0]]
+        # for member in member_list:
+        #     member_list_embed.add_field(name=member, value="Value", inline=False)
 
         await inter.response.send_message(embed=member_list_embed)
 
@@ -187,8 +191,10 @@ class TeamDropdown(Select):
         super().__init__(placeholder="Select :", options=options)
     
     async def callback(self, inter: Interaction): 
-        members_that_need_teams[self.values[0]].append("Name")
-        print(members_that_need_teams[self.values[0]])
+        # members_that_need_teams[self.values[0]].append("Name")
+        # print(members_that_need_teams[self.values[0]])
+
+         # Add user name to database here ..........
         await inter.response.send_message(f"You have selected {self.values[0]}", ephemeral=True)
 
 class DropdownView(View):
