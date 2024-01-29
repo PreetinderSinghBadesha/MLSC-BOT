@@ -4,14 +4,19 @@ from os import getenv
 from discord.ext import commands
 from bot import MlscBot
 from discord.ui import View, Select, button
-from firebase_admin import credentials, initialize_app, db
 import json
-from firebase import firebase
+import firebase_admin
+from firebase_admin import credentials, db
 
-firebase = firebase.FirebaseApplication(getenv('database'), None)
-member = firebase.get('/member-dev', None)
-print(member['app-dev'])
-print(member['app-dev']['name'])
+from google.cloud import firestore
+import os
+
+# Set the environment variable for the path to your Firebase service account key JSON file
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "database-key.json"
+
+# Initialize Firestore client
+db = firestore.Client()
+
 
 class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
@@ -147,7 +152,7 @@ class MemberDropdown(Select):
                 label="Web Dev", description="description", emoji="🕸️", value="Webdev"
             ),
             SelectOption(
-                label="ML/Ai", description="description", emoji="🤖", value="ML/AI"
+                label="ML/Ai", description="description", emoji="🤖", value="ML-AI"
             ),
             SelectOption(
                 label="Design", description="description", emoji="🖼️", value="Design"
@@ -161,12 +166,27 @@ class MemberDropdown(Select):
     
     async def callback(self, inter: Interaction):
         member_list_embed = Embed(title="Members for available", color=0x00FFB3)
+        doc_ref = db.collection("Member").document(self.values[0])
+        memberlist = []
+
+        doc = doc_ref.get()
+        if doc.exists:
+            print(f"Document data: {doc.to_dict()}")
+            discord_ids = doc.to_dict()
+            for id in discord_ids["Discord_id"]:
+                memberlist.append(id)
+        else:
+            print("No such document!")
         
-        # member_list = members_that_need_teams[self.values[0]]
-        # for member in member_list:
-        #     member_list_embed.add_field(name=member, value="Value", inline=False)
+            # members_that_need_teams[self.values[0]]
+        for member in memberlist:
+            member_list_embed.add_field(name=f"<@{member}>", value="", inline=False)
 
         await inter.response.send_message(embed=member_list_embed)
+        
+        
+        
+        
 
 class TeamDropdown(Select):
     def __init__(self):
