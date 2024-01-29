@@ -178,15 +178,10 @@ class MemberDropdown(Select):
         else:
             print("No such document!")
         
-            # members_that_need_teams[self.values[0]]
         for member in memberlist:
             member_list_embed.add_field(name=f"<@{member}>", value="", inline=False)
 
-        await inter.response.send_message(embed=member_list_embed)
-        
-        
-        
-        
+        await inter.response.send_message(embed=member_list_embed) 
 
 class TeamDropdown(Select):
     def __init__(self):
@@ -198,7 +193,7 @@ class TeamDropdown(Select):
                 label="Web Dev", description="description", emoji="🕸️", value="Webdev"
             ),
             SelectOption(
-                label="ML/Ai", description="description", emoji="🤖", value="ML/AI"
+                label="ML/Ai", description="description", emoji="🤖", value="ML-AI"
             ),
             SelectOption(
                 label="Design", description="description", emoji="🖼️", value="Design"
@@ -211,6 +206,24 @@ class TeamDropdown(Select):
         super().__init__(placeholder="Select :", options=options)
     
     async def callback(self, inter: Interaction): 
+        member_list_embed = Embed(title="Members for available", color=0x00FFB3)
+
+        doc_ref = db.collection("Member").document(self.values[0])
+        memberlist = []
+
+        doc = doc_ref.get()
+        if doc.exists:
+            discord_ids = doc.to_dict()
+            for id in discord_ids["Discord_id"]:
+                memberlist.append(id)
+
+        memberlist.append("384848438") # add user id here
+        
+        id_ref = db.collection("Member").document(self.values[0])
+        data = {"Discord_id": memberlist}
+        id_ref.set(data, merge=True)
+
+
         # members_that_need_teams[self.values[0]].append("Name")
         # print(members_that_need_teams[self.values[0]])
 
@@ -221,7 +234,6 @@ class DropdownView(View):
     def __init__(self, dropdown: Select):
         super().__init__(timeout=60)
         self.add_item(dropdown) 
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TeamManager(bot))
