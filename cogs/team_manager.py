@@ -1,12 +1,9 @@
-from discord import Interaction, app_commands, PermissionOverwrite, Color, Member, Forbidden, Button, ButtonStyle, SelectOption, Embed
+from discord import client, Interaction, app_commands, PermissionOverwrite, Color, Member, Forbidden, Button, ButtonStyle, SelectOption, Embed
 from discord.utils import get
-from os import getenv
 from discord.ext import commands
 from bot import MlscBot
 from discord.ui import View, Select, button
-import json
-import firebase_admin
-from firebase_admin import credentials, db
+from firebase_admin import db
 
 from google.cloud import firestore
 import os
@@ -40,7 +37,6 @@ class TeamManager(commands.Cog):
                 await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
                 print(f"{author.name} Created role 'Team {team_name}'")
                 team_role = get(guild.roles, name=f"Team {team_name}")
-                admin = get(guild.roles, name=f"Team {team_name}")
 
                 print(team_role)
                 
@@ -73,7 +69,6 @@ class TeamManager(commands.Cog):
 
         if role_to_assign in author.roles and team_leader in author.roles:
             try:
-                #remove username from database after this command is runned ..........
 
                 await inter.response.send_message(f"Invitation send to {member.mention}")
                 await member.send(f"Do you want to join team {team_name}.", view=button_prompt)
@@ -109,11 +104,10 @@ class TeamManager(commands.Cog):
         
     @app_commands.command()
     async def find_member(self, inter: Interaction):
-        dropdown = MemberDropdown()
+        dropdown = MemberDropdown(commands.Bot)
         view = DropdownView(dropdown)
 
         try:
-            # Show username to command executer from database........
             await inter.response.send_message("Select your Member dev:", view=view, ephemeral=True)
         
         except IndexError:
@@ -143,7 +137,8 @@ class ButtonPrompt(View):
         self.stop()
 
 class MemberDropdown(Select):
-    def __init__(self):
+    def __init__(self, bot: MlscBot):
+        self.bot = bot
         options = {
             SelectOption(
                 label="App dev", description="description", emoji="📱", value="Appdev"
@@ -171,17 +166,34 @@ class MemberDropdown(Select):
 
         doc = doc_ref.get()
         if doc.exists:
-            print(f"Document data: {doc.to_dict()}")
             discord_ids = doc.to_dict()
             for id in discord_ids["Discord_id"]:
-                memberlist.append(id)
+                memberlist.append(int(id))
         else:
             print("No such document!")
+
+        def check_role(user_id):
+            flag = 0
+            try:
+                for role in inter.guild.get_member(int(user_id)).roles:
+                    if "Team" in role.name:
+                        flag = 1
+                        break
+                return flag
+            except Exception as e:
+                flag = 2
+                print(e)
+
+        print(memberlist)
         
         for member in memberlist:
-            member_list_embed.add_field(name=f"<@{member}>", value="", inline=False)
+            if check_role(member) == 0:
+                try:
+                    member_list_embed.add_field(name=f"{inter.guild.get_member(int(member))}", value="", inline=False)
+                except Exception as e:
+                    print(e)
 
-        await inter.response.send_message(embed=member_list_embed) 
+        await inter.response.send_message(embed=member_list_embed)
 
 class TeamDropdown(Select):
     def __init__(self):
@@ -205,7 +217,8 @@ class TeamDropdown(Select):
 
         super().__init__(placeholder="Select :", options=options)
     
-    async def callback(self, inter: Interaction): 
+    async def callback(self, inter: Interaction):
+        author = inter.user
         member_list_embed = Embed(title="Members for available", color=0x00FFB3)
 
         doc_ref = db.collection("Member").document(self.values[0])
@@ -217,23 +230,18 @@ class TeamDropdown(Select):
             for id in discord_ids["Discord_id"]:
                 memberlist.append(id)
 
-        memberlist.append("384848438") # add user id here
+        memberlist.append(f"{author.id}") # add user id here
         
         id_ref = db.collection("Member").document(self.values[0])
         data = {"Discord_id": memberlist}
         id_ref.set(data, merge=True)
 
-
-        # members_that_need_teams[self.values[0]].append("Name")
-        # print(members_that_need_teams[self.values[0]])
-
-         # Add user name to database here ..........
         await inter.response.send_message(f"You have selected {self.values[0]}", ephemeral=True)
 
 class DropdownView(View):
     def __init__(self, dropdown: Select):
         super().__init__(timeout=60)
-        self.add_item(dropdown) 
+        self.add_item(dropdown)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TeamManager(bot))
