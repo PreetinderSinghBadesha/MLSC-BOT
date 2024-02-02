@@ -3,8 +3,7 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from os import getenv
 
-exts =  ["cogs.welcomer",
-        "cogs.role_manager", 
+exts =  ["cogs.welcomer", 
         "cogs.admin_commands",
         "cogs.team_manager"]
 

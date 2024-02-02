@@ -20,7 +20,7 @@ class TeamManager(commands.Cog):
         self.bot = bot
 
     @app_commands.command()
-    async def create_team(self, inter:Interaction, team_name: str):
+    async def register(self, inter:Interaction, team_name: str):
         guild = inter.guild
         author = inter.user
         team_leader = get(guild.roles, name="Team Leader")
@@ -69,7 +69,6 @@ class TeamManager(commands.Cog):
 
         if role_to_assign in author.roles and team_leader in author.roles:
             try:
-
                 await inter.response.send_message(f"Invitation send to {member.mention}")
                 await member.send(f"Do you want to join team {team_name}.", view=button_prompt)
                 await button_prompt.wait()
