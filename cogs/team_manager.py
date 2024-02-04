@@ -18,9 +18,6 @@ class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
         self.bot = bot
 
-    def checkTeam():
-        ...
-
     @app_commands.command()
     async def register(self, inter:Interaction, team_name: str):
         guild = inter.guild
@@ -32,29 +29,41 @@ class TeamManager(commands.Cog):
             guild.default_role: PermissionOverwrite(connect=False),
             author: PermissionOverwrite(connect=True, manage_channels=True)
         }
-        
+
         if team_name:
-            try:
-                #Create role for team
-                await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
-                print(f"{author.name} Created role 'Team {team_name}'")
-                team_role = get(guild.roles, name=f"Team {team_name}")
+            Team_role_status = False
+            for role in author.roles:
+                if "Team" in role.name:
+                    Team_role_status = True
+                    break
+
+            if Team_role_status:
+                await inter.response.send_message(f"You are already in {role.name}", ephemeral=True)
+                
+            else:
+                try:
+                    #Create role for team
+                    await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
+                    print(f"{author.name} Created role 'Team {team_name}'")
+                    team_role = get(guild.roles, name=f"Team {team_name}")
 
 
-                #Assign team leader and team role to command excuter
-                await author.add_roles(team_role)
-                await author.add_roles(team_leader)
+                    #Assign team leader and team role to command excuter
+                    await author.add_roles(team_role)
+                    await author.add_roles(team_leader)
 
-                overwrites[team_role] = PermissionOverwrite(connect=True)
+                    overwrites[team_role] = PermissionOverwrite(connect=True)
 
-                #Create voice channel for team
-                team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
-                print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
-                await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
+                    #Create voice channel for team
+                    team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
+                    print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
+                    await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
 
-            except Exception as e:
-                print(e)
-                await inter.response.send_message("You don't have permission to create teams.")
+                except Exception as e:
+                    print(e)
+                    await inter.response.send_message("You don't have permission to create teams.")
+                    
+            
 
         else:
             inter.response.send_message("Enter team name", ephemeral=True) 
