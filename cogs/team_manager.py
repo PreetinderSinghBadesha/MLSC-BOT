@@ -4,7 +4,6 @@ from discord.ext import commands
 from bot import MlscBot
 from discord.ui import View, Select, button
 from firebase_admin import db
-
 from google.cloud import firestore
 import os
 
@@ -18,6 +17,9 @@ db = firestore.Client()
 class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
         self.bot = bot
+
+    def checkTeam():
+        ...
 
     @app_commands.command()
     async def register(self, inter:Interaction, team_name: str):
@@ -38,8 +40,7 @@ class TeamManager(commands.Cog):
                 print(f"{author.name} Created role 'Team {team_name}'")
                 team_role = get(guild.roles, name=f"Team {team_name}")
 
-                print(team_role)
-                
+
                 #Assign team leader and team role to command excuter
                 await author.add_roles(team_role)
                 await author.add_roles(team_leader)
@@ -75,9 +76,19 @@ class TeamManager(commands.Cog):
 
                 #when invite is accepted
                 if button_prompt.value == True:
-                    await member.add_roles(role_to_assign)
-                    await member.send(f"You have accepted invitation from Team {team_name}.")
-                    await author.send(f"{member.mention} have accepted your invitation to {team_name}.")
+                    Team_role_status = False
+                    for role in member.roles:
+                        if "Team" in role.name:
+                            Team_role_status = True
+                            break
+                           
+                    if Team_role_status == True:
+                        await member.send(f"You have already Joined {role.name}")
+                        await author.send(f"{member.mention} is already in {role.name}")
+                    else:
+                        await member.add_roles(role_to_assign)
+                        await member.send(f"You have accepted invitation from Team {team_name}.")
+                        await author.send(f"{member.mention} have accepted your invitation to {team_name}.")
 
                 #when invite is rejected
                 elif button_prompt.value == False:
@@ -182,8 +193,6 @@ class MemberDropdown(Select):
             except Exception as e:
                 flag = 2
                 print(e)
-
-        print(memberlist)
         
         for member in memberlist:
             if check_role(member) == 0:
