@@ -13,7 +13,6 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "database-key.json"
 # Initialize Firestore client
 db = firestore.Client()
 
-
 class TeamManager(commands.Cog):
     def __init__(self, bot: MlscBot):
         self.bot = bot
@@ -42,26 +41,36 @@ class TeamManager(commands.Cog):
                 
             else:
                 try:
-                    #Create role for team
-                    await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
-                    print(f"{author.name} Created role 'Team {team_name}'")
-                    team_role = get(guild.roles, name=f"Team {team_name}")
+                    sameTeam = False
+                    for vc in guild.voice_channels:
+                        if vc.name == f"{team_name}'s Voice channel":
+                            sameTeam = True
+                            break
+
+                    if not sameTeam:
+                        #Create role for team
+                        await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
+                        print(f"{author.name} Created role 'Team {team_name}'")
+                        team_role = get(guild.roles, name=f"Team {team_name}")
 
 
-                    #Assign team leader and team role to command excuter
-                    await author.add_roles(team_role)
-                    await author.add_roles(team_leader)
+                        #Assign team leader and team role to command excuter
+                        await author.add_roles(team_role)
+                        await author.add_roles(team_leader)
 
-                    overwrites[team_role] = PermissionOverwrite(connect=True)
+                        overwrites[team_role] = PermissionOverwrite(connect=True)
 
-                    #Create voice channel for team
-                    team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
-                    print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
-                    await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
+                        #Create voice channel for team
+                        team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
+                        print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
+                        await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True),
+
+                    else:
+                        await inter.response.send_message(f"This team name already exist !!", ephemeral=True)
 
                 except Exception as e:
                     print(e)
-                    await inter.response.send_message("You don't have permission to create teams.")
+                    await inter.response.send_message("You don't have permission to create teams.", ephemeral=True)
                     
             
 
@@ -79,7 +88,7 @@ class TeamManager(commands.Cog):
 
         if role_to_assign in author.roles and team_leader in author.roles:
             try:
-                await inter.response.send_message(f"Invitation send to {member.mention}")
+                await inter.response.send_message(f"Invitation send to {member.mention}", ephemeral=True)
                 await member.send(f"Do you want to join team {team_name}.", view=button_prompt)
                 await button_prompt.wait()
 
@@ -210,7 +219,7 @@ class MemberDropdown(Select):
                 except Exception as e:
                     print(e)
 
-        await inter.response.send_message(embed=member_list_embed)
+        await inter.response.send_message(embed=member_list_embed, ephemeral=True)
 
 class TeamDropdown(Select):
     def __init__(self):
