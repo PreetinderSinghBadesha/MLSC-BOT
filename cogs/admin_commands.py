@@ -19,7 +19,7 @@ class AdminCommands(commands.Cog):
                     if str(member.id) == row["Discord Ids"]:
                         team_role = get(guild.roles, name="Participant")
                         await member.add_roles(team_role)
-        inter.response.send_message("Role assigned to Participants", ephemeral=True)
+        await inter.response.send_message("Role assigned to Participants", ephemeral=True)
 
     @app_commands.command()
     async def serverid(self, inter: Interaction):
