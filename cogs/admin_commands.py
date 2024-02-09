@@ -3,6 +3,7 @@ from discord.ext import commands
 from bot import MlscBot
 from csv import DictReader
 from discord.utils import get
+import json
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot: MlscBot):
@@ -13,9 +14,16 @@ class AdminCommands(commands.Cog):
         guild = inter.guild
         member_ids_set = set(str(member.id) for member in guild.members)
 
-        with open('Makeathon.csv', 'r') as csvfile:
-            reader = DictReader(csvfile)
-            csv_ids_set = set(row["Discord Ids"] for row in reader)
+        # Load the JSON data from the file
+        with open('Makeathon.json') as f:
+            data = json.load(f)
+
+        # Extract the Discord IDs
+        csv_ids_set = set()
+        for team_name, member_info in data.items():
+            discord_id = member_info.get("Discord Ids")  # Use .get() to handle potential missing keys
+            if discord_id:
+                csv_ids_set.add(discord_id)
 
         common_ids = member_ids_set.intersection(csv_ids_set)
 

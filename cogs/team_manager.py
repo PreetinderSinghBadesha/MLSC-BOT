@@ -7,6 +7,7 @@ from firebase_admin import db
 from google.cloud import firestore
 from csv import DictReader
 import os
+import json
 
 # Set the environment variable for the path to your Firebase service account key JSON file
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "database-key.json"
@@ -44,9 +45,16 @@ class TeamManager(commands.Cog):
                 try:
                     sameTeam = False
 
-                    with open('Makeathon.csv', 'r') as csvfile:
-                        reader = DictReader(csvfile)
-                        csv_ids_set = set(row["Team Name"] for row in reader)
+                    # Load the JSON data from the file
+                    with open('Makeathon.json') as f:
+                        data = json.load(f)
+
+                    # Extract the Discord IDs
+                    csv_ids_set = set()
+                    for team_name, member_info in data.items():
+                        discord_id = member_info.get("Discord Ids")  # Use .get() to handle potential missing keys
+                        if discord_id:
+                            csv_ids_set.add(discord_id)
 
                     for vc in guild.voice_channels:
                         if vc.name == f"{team_name}'s Voice channel":
