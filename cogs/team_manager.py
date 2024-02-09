@@ -5,6 +5,7 @@ from bot import MlscBot
 from discord.ui import View, Select, button
 from firebase_admin import db
 from google.cloud import firestore
+from csv import DictReader
 import os
 
 # Set the environment variable for the path to your Firebase service account key JSON file
@@ -42,12 +43,17 @@ class TeamManager(commands.Cog):
             else:
                 try:
                     sameTeam = False
+
+                    with open('Makeathon.csv', 'r') as csvfile:
+                        reader = DictReader(csvfile)
+                        csv_ids_set = set(row["Team Name"] for row in reader)
+
                     for vc in guild.voice_channels:
                         if vc.name == f"{team_name}'s Voice channel":
                             sameTeam = True
                             break
 
-                    if not sameTeam:
+                    if not sameTeam and team_name in csv_ids_set:
                         #Create role for team
                         await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
                         print(f"{author.name} Created role 'Team {team_name}'")
@@ -71,8 +77,6 @@ class TeamManager(commands.Cog):
                 except Exception as e:
                     print(e)
                     await inter.response.send_message("You don't have permission to create teams.", ephemeral=True)
-                    
-            
 
         else:
             inter.response.send_message("Enter team name", ephemeral=True) 
@@ -99,7 +103,7 @@ class TeamManager(commands.Cog):
                         if "Team" in role.name:
                             Team_role_status = True
                             break
-                           
+
                     if Team_role_status == True:
                         await member.send(f"You have already Joined {role.name}")
                         await author.send(f"{member.mention} is already in {role.name}")
@@ -112,7 +116,7 @@ class TeamManager(commands.Cog):
                 elif button_prompt.value == False:
                     await member.send(f"You have rejected invitation from Team {team_name}.")
                     await author.send(f"{member.mention} have rejected your invitation to {team_name}.")
-                    
+      
             except Forbidden:
                 await inter.response.send_message(f"{author.mention} don't have the permissions to assign roles.", ephemeral=True)
 
@@ -123,13 +127,13 @@ class TeamManager(commands.Cog):
     async def find_team(self, inter: Interaction):
         dropdown = TeamDropdown()
         view = DropdownView(dropdown)
-        
+
         try:
             await inter.response.send_message("Select your interest:", view=view, ephemeral=True)
-        
+
         except IndexError:
             print("list Index error is happening ....")
-        
+  
     @app_commands.command()
     async def find_member(self, inter: Interaction):
         dropdown = MemberDropdown(commands.Bot)
@@ -172,16 +176,25 @@ class MemberDropdown(Select):
                 label="App dev", description="description", emoji="📱", value="Appdev"
             ),
             SelectOption(
-                label="Web Dev", description="description", emoji="🕸️", value="Webdev"
+                label="Frontend (Web Dev)", description="description", emoji="🕸️", value="FrontEndWebdev"
+            ),
+             SelectOption(
+                label="Backend (Web Dev)", description="description", emoji="⚙️", value="BackEndWebdev"
             ),
             SelectOption(
-                label="ML/Ai", description="description", emoji="🤖", value="ML-AI"
+                label="AI/ML", description="description", emoji="🤖", value="ML-AI"
             ),
             SelectOption(
-                label="Design", description="description", emoji="🖼️", value="Design"
+                label="UI/UX Design", description="description", emoji="🖼️", value="Design"
             ),
             SelectOption(
-                label="Backend", description="description", emoji="⚙️", value="Backend"
+                label="Blockchain", description="description", emoji="⚙️", value="Blockchain"
+            ),
+            SelectOption(
+                label="Web3", description="description", emoji="⚙️", value="Web3"
+            ),
+            SelectOption(
+                label="IoT", description="description", emoji="⚙️", value="IoT"
             ),
         }
 
@@ -228,16 +241,25 @@ class TeamDropdown(Select):
                 label="App dev", description="description", emoji="📱", value="Appdev"
             ),
             SelectOption(
-                label="Web Dev", description="description", emoji="🕸️", value="Webdev"
+                label="Frontend (Web Dev)", description="description", emoji="🕸️", value="FrontEndWebdev"
+            ),
+             SelectOption(
+                label="Backend (Web Dev)", description="description", emoji="⚙️", value="BackEndWebdev"
             ),
             SelectOption(
-                label="ML/Ai", description="description", emoji="🤖", value="ML-AI"
+                label="AI/ML", description="description", emoji="🤖", value="ML-AI"
             ),
             SelectOption(
-                label="Design", description="description", emoji="🖼️", value="Design"
+                label="UI/UX Design", description="description", emoji="🖼️", value="Design"
             ),
             SelectOption(
-                label="Backend", description="description", emoji="⚙️", value="Backend"
+                label="Blockchain", description="description", emoji="⚙️", value="Blockchain"
+            ),
+            SelectOption(
+                label="Web3", description="description", emoji="⚙️", value="Web3"
+            ),
+            SelectOption(
+                label="IoT", description="description", emoji="⚙️", value="IoT"
             ),
         }
 
