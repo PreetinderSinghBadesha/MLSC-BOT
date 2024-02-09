@@ -173,28 +173,28 @@ class MemberDropdown(Select):
         self.bot = bot
         options = {
             SelectOption(
-                label="App dev", description="description", emoji="📱", value="Appdev"
+                label="App dev", description="From concept to click: Crafting apps that connect.", emoji="📱", value="Appdev"
             ),
             SelectOption(
-                label="Frontend (Web Dev)", description="description", emoji="🕸️", value="FrontEndWebdev"
+                label="Frontend (Web Dev)", description="A digital architect; creating virtual tales of your own imagination.", emoji="🕸️", value="FrontEndWebdev"
             ),
              SelectOption(
-                label="Backend (Web Dev)", description="description", emoji="⚙️", value="BackEndWebdev"
+                label="Backend (Web Dev)", description="Data, requests; the digital world needs a behind-the-curtain genius.", emoji="⚙️", value="BackEndWebdev"
             ),
             SelectOption(
-                label="AI/ML", description="description", emoji="🤖", value="ML-AI"
+                label="AI/ML", description="passionate minds converge and exploring wonders of ML , AI. ", emoji="🤖", value="ML-AI"
             ),
             SelectOption(
-                label="UI/UX Design", description="description", emoji="🖼️", value="Design"
+                label="UI/UX Design", description="Craft seamless Digital experiences with your insights on UI  principles", emoji="🖼️", value="Design"
             ),
             SelectOption(
-                label="Blockchain", description="description", emoji="⚙️", value="Blockchain"
+                label="Blockchain", description="An immutable ledger technology ensuring secure and transparent transactions.", emoji="⛓️", value="Blockchain"
             ),
             SelectOption(
-                label="Web3", description="description", emoji="⚙️", value="Web3"
+                label="Web3", description="Decentralized internet empowering users, cutting out middlemen. Join now!", emoji="🔒", value="Web3"
             ),
             SelectOption(
-                label="IoT", description="description", emoji="⚙️", value="IoT"
+                label="IoT", description="Connecting network of physical objects with internet to control database.", emoji="🖥️", value="IoT"
             ),
         }
 
@@ -238,28 +238,28 @@ class TeamDropdown(Select):
     def __init__(self):
         options = {
             SelectOption(
-                label="App dev", description="description", emoji="📱", value="Appdev"
+                label="App dev", description="From concept to click: Crafting apps that connect.", emoji="📱", value="Appdev"
             ),
             SelectOption(
-                label="Frontend (Web Dev)", description="description", emoji="🕸️", value="FrontEndWebdev"
+                label="Frontend (Web Dev)", description="A digital architect; creating virtual tales of your own imagination.", emoji="🕸️", value="FrontEndWebdev"
             ),
              SelectOption(
-                label="Backend (Web Dev)", description="description", emoji="⚙️", value="BackEndWebdev"
+                label="Backend (Web Dev)", description="Data, requests; the digital world needs a behind-the-curtain genius.", emoji="⚙️", value="BackEndWebdev"
             ),
             SelectOption(
-                label="AI/ML", description="description", emoji="🤖", value="ML-AI"
+                label="AI/ML", description="passionate minds converge and exploring wonders of ML , AI. ", emoji="🤖", value="ML-AI"
             ),
             SelectOption(
-                label="UI/UX Design", description="description", emoji="🖼️", value="Design"
+                label="UI/UX Design", description="Craft seamless Digital experiences with your insights on UI  principles", emoji="🖼️", value="Design"
             ),
             SelectOption(
-                label="Blockchain", description="description", emoji="⚙️", value="Blockchain"
+                label="Blockchain", description="An immutable ledger technology ensuring secure and transparent transactions.", emoji="⛓️", value="Blockchain"
             ),
             SelectOption(
-                label="Web3", description="description", emoji="⚙️", value="Web3"
+                label="Web3", description="Decentralized internet empowering users, cutting out middlemen. Join now!", emoji="🔒", value="Web3"
             ),
             SelectOption(
-                label="IoT", description="description", emoji="⚙️", value="IoT"
+                label="IoT", description="Connecting network of physical objects with internet to control database.", emoji="🖥️", value="IoT"
             ),
         }
 
