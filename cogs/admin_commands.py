@@ -4,6 +4,14 @@ from bot import MlscBot
 from csv import DictReader
 from discord.utils import get
 import json
+from google.cloud import firestore
+from os import environ
+
+# Set the environment variable for the path to your Firebase service account key JSON file
+environ["GOOGLE_APPLICATION_CREDENTIALS"] = "database-key.json"
+
+# Initialize Firestore client
+db = firestore.Client()
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot: MlscBot):

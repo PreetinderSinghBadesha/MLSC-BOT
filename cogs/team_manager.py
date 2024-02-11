@@ -3,9 +3,7 @@ from discord.utils import get
 from discord.ext import commands
 from bot import MlscBot
 from discord.ui import View, Select, button
-from firebase_admin import db
 from google.cloud import firestore
-from csv import DictReader
 import os
 import json
 
@@ -44,15 +42,16 @@ class TeamManager(commands.Cog):
             else:
                 try:
                     sameTeam = False
-
                     # Load the JSON data from the file
                     with open('Makeathon.json') as f:
                         data = json.load(f)
 
+                
+
                     # Extract the Discord IDs
                     csv_ids_set = set()
                     for team_name, member_info in data.items():
-                        discord_id = member_info.get("Discord Ids")  # Use .get() to handle potential missing keys
+                        discord_id = member_info.get("Team Name")  # Use .get() to handle potential missing keys
                         if discord_id:
                             csv_ids_set.add(discord_id)
 
@@ -210,13 +209,13 @@ class MemberDropdown(Select):
     
     async def callback(self, inter: Interaction):
         member_list_embed = Embed(title="Members for available", color=0x00FFB3)
-        doc_ref = db.collection("Member").document(self.values[0])
+        doc_ref = db.collection("Discord_Users").document("Member Dev List")
         memberlist = []
 
         doc = doc_ref.get()
         if doc.exists:
             discord_ids = doc.to_dict()
-            for id in discord_ids["Discord_id"]:
+            for id in discord_ids[self.values[0]]:
                 memberlist.append(int(id))
         else:
             print("No such document!")
@@ -277,19 +276,19 @@ class TeamDropdown(Select):
         author = inter.user
         member_list_embed = Embed(title="Members for available", color=0x00FFB3)
 
-        doc_ref = db.collection("Member").document(self.values[0])
+        doc_ref = db.collection("Discord_Users").document("Member Dev List")
         memberlist = []
 
         doc = doc_ref.get()
         if doc.exists:
             discord_ids = doc.to_dict()
-            for id in discord_ids["Discord_id"]:
+            for id in discord_ids[self.values[0]]:
                 memberlist.append(id)
 
         memberlist.append(f"{author.id}") # add user id here
         
-        id_ref = db.collection("Member").document(self.values[0])
-        data = {"Discord_id": memberlist}
+        id_ref = db.collection("Discord_Users").document("Member Dev List")
+        data = {self.values[0]: memberlist}
         id_ref.set(data, merge=True)
 
         await inter.response.send_message(f"You have selected {self.values[0]}", ephemeral=True)
