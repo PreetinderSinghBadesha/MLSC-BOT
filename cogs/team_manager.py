@@ -38,48 +38,51 @@ class TeamManager(commands.Cog):
 
             if Team_role_status:
                 await inter.response.send_message(f"You are already in {role.name}", ephemeral=True)
-                
+
             else:
                 try:
                     sameTeam = False
-                    # Load the JSON data from the file
-                    with open('Makeathon.json') as f:
-                        data = json.load(f)
 
-                
+                    doc_ref = db.collection("Discord_Users").document("Teams")
+                    database_team_set = set()
 
-                    # Extract the Discord IDs
-                    csv_ids_set = set()
-                    for team_name, member_info in data.items():
-                        discord_id = member_info.get("Team Name")  # Use .get() to handle potential missing keys
-                        if discord_id:
-                            csv_ids_set.add(discord_id)
+                    doc = doc_ref.get()
+                    if doc.exists:
+                        discord_ids = doc.to_dict()
+                        for teamName, member_info in discord_ids.items():
+                            discord_id = member_info.get("Team Name")
+                            if discord_id:
+                                database_team_set.add(discord_id)
 
                     for vc in guild.voice_channels:
                         if vc.name == f"{team_name}'s Voice channel":
                             sameTeam = True
                             break
 
-                    if not sameTeam and team_name in csv_ids_set:
-                        #Create role for team
-                        await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
-                        print(f"{author.name} Created role 'Team {team_name}'")
-                        team_role = get(guild.roles, name=f"Team {team_name}")
+                    try:
+                        if not sameTeam and team_name in database_team_set:
+                            await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
+                            #Create role for team
+                            await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
+                            print(f"{author.name} Created role 'Team {team_name}'")
+                            team_role = get(guild.roles, name=f"Team {team_name}")
 
+                            #Assign team leader and team role to command excuter
+                            await author.add_roles(team_role)
+                            await author.add_roles(team_leader)
 
-                        #Assign team leader and team role to command excuter
-                        await author.add_roles(team_role)
-                        await author.add_roles(team_leader)
+                            overwrites[team_role] = PermissionOverwrite(connect=True)
 
-                        overwrites[team_role] = PermissionOverwrite(connect=True)
+                            #Create voice channel for team
+                            team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
+                            print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
+                            
+                        else:
+                            await inter.response.send_message(f"Sorry, could not find your team in the database. If you have registered, contact MLSC for help. Error Message", ephemeral=True)
 
-                        #Create voice channel for team
-                        team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
-                        print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
-                        await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True),
-
-                    else:
-                        await inter.response.send_message(f"This team name already exist !!", ephemeral=True)
+                    except Exception as e:
+                        print(e)
+                        await inter.response.send_message("An error occurred while processing your request.", ephemeral=True)
 
                 except Exception as e:
                     print(e)

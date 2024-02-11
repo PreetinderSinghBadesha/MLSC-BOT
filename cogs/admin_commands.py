@@ -22,18 +22,20 @@ class AdminCommands(commands.Cog):
         guild = inter.guild
         member_ids_set = set(str(member.id) for member in guild.members)
 
-        # Load the JSON data from the file
-        with open('Makeathon.json') as f:
-            data = json.load(f)
+        doc_ref = db.collection("Discord_Users").document("Teams")
+        database_ids_set = set()
 
-        # Extract the Discord IDs
-        csv_ids_set = set()
-        for team_name, member_info in data.items():
-            discord_id = member_info.get("Discord Ids")  # Use .get() to handle potential missing keys
-            if discord_id:
-                csv_ids_set.add(discord_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            discord_ids = doc.to_dict()
+            for team_name, member_info in discord_ids.items():
+                discord_id = member_info.get("Discord Ids")
+                if discord_id:
+                    database_ids_set.add(discord_id)
+        else:
+            print("No such document!")
 
-        common_ids = member_ids_set.intersection(csv_ids_set)
+        common_ids = member_ids_set.intersection(database_ids_set)
 
         team_role = get(guild.roles, name="Participant")
 
