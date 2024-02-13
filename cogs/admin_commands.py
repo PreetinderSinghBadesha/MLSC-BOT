@@ -21,6 +21,7 @@ class AdminCommands(commands.Cog):
     async def assign_participants_role(self, inter: Interaction):
         guild = inter.guild
         member_ids_set = set(str(member.id) for member in guild.members)
+        member_username_set = set(str(member.name) for member in guild.members)
 
         doc_ref = db.collection("Discord_Users").document("Teams")
         database_ids_set = set()
@@ -36,11 +37,19 @@ class AdminCommands(commands.Cog):
             print("No such document!")
 
         common_ids = member_ids_set.intersection(database_ids_set)
+        common_names = member_username_set.intersection(database_ids_set)
+
+        print(common_ids)
+        print(common_names)
 
         team_role = get(guild.roles, name="Participant")
 
         for member_id in common_ids:
             member = guild.get_member(int(member_id))
+            await member.add_roles(team_role)
+
+        for member_name in common_names:
+            member = guild.get_member_named(member_name)
             await member.add_roles(team_role)
 
         await inter.response.send_message("Role assigned to Participants", ephemeral=True)
