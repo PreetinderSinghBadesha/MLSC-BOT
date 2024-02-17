@@ -60,23 +60,25 @@ class TeamManager(commands.Cog):
                             break
 
                     try:
-                        if not sameTeam and team_name in database_team_set:
-                            await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
-                            #Create role for team
-                            await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
-                            print(f"{author.name} Created role 'Team {team_name}'")
-                            team_role = get(guild.roles, name=f"Team {team_name}")
+                        if team_name in database_team_set:
+                            if not sameTeam:
+                                await inter.response.send_message(f"{team_name}'s Voice channel Created", ephemeral=True)
+                                #Create role for team
+                                await guild.create_role(name=f"Team {team_name}", colour=Color.from_rgb(0, 31, 63))
+                                print(f"{author.name} Created role 'Team {team_name}'")
+                                team_role = get(guild.roles, name=f"Team {team_name}")
 
-                            #Assign team leader and team role to command excuter
-                            await author.add_roles(team_role)
-                            await author.add_roles(team_leader)
+                                #Assign team leader and team role to command excuter
+                                await author.add_roles(team_role)
+                                await author.add_roles(team_leader)
 
-                            overwrites[team_role] = PermissionOverwrite(connect=True)
+                                overwrites[team_role] = PermissionOverwrite(connect=True)
 
-                            #Create voice channel for team
-                            team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
-                            print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
-                            
+                                #Create voice channel for team
+                                team_voice_channel = await guild.create_voice_channel(name=f"{team_name}'s Voice channel", overwrites=overwrites)
+                                print(f"{author.name} created {team_voice_channel.name} channel for team {team_name} .....")
+                            else:
+                                await inter.response.send_message(f"This Team name already exist.", ephemeral=True)
                         else:
                             await inter.response.send_message(f"Sorry, could not find your team in the database. If you have registered, contact MLSC for help. Error Message", ephemeral=True)
 
@@ -143,6 +145,18 @@ class TeamManager(commands.Cog):
 
         except IndexError:
             print("list Index error is happening ....")
+
+    @app_commands.command()
+    async def remove_name_from_database(self, inter:Interaction):
+        dropdown = RemoveFromDataDropdown()
+        view = DropdownView(dropdown)
+
+        try:
+            await inter.response.send_message("Select your interest:", view=view, ephemeral=True)
+
+        except IndexError:
+            print("list Index error is happening ....")
+
   
     @app_commands.command()
     async def find_member(self, inter: Interaction):
@@ -280,6 +294,57 @@ class TeamDropdown(Select):
         member_list_embed = Embed(title="Members for available", color=0x00FFB3)
 
         doc_ref = db.collection("Discord_Users").document("Member Dev List")
+        memberlist = set()
+
+        doc = doc_ref.get()
+        if doc.exists:
+            discord_ids = doc.to_dict()
+            for id in discord_ids[self.values[0]]:
+                memberlist.add(id)
+
+        memberlist.add(f"{author.id}") # add user id here
+        
+        id_ref = db.collection("Discord_Users").document("Member Dev List")
+        data = {self.values[0]: list(memberlist)}
+        id_ref.set(data, merge=True)
+
+        await inter.response.send_message(f"You have selected {self.values[0]}\nOkay! We have put you in the database!", ephemeral=True)
+
+class RemoveFromDataDropdown(Select):
+    def __init__(self):
+        options = {
+            SelectOption(
+                label="App dev", description="From concept to click: Crafting apps that connect.", emoji="📱", value="Appdev"
+            ),
+            SelectOption(
+                label="Frontend (Web Dev)", description="A digital architect; creating virtual tales of your own imagination.", emoji="🕸️", value="FrontEndWebdev"
+            ),
+             SelectOption(
+                label="Backend (Web Dev)", description="Data, requests; the digital world needs a behind-the-curtain genius.", emoji="⚙️", value="BackEndWebdev"
+            ),
+            SelectOption(
+                label="AI/ML", description="passionate minds converge and exploring wonders of ML , AI. ", emoji="🤖", value="ML-AI"
+            ),
+            SelectOption(
+                label="UI/UX Design", description="Craft seamless Digital experiences with your insights on UI  principles", emoji="🖼️", value="Design"
+            ),
+            SelectOption(
+                label="Blockchain", description="An immutable ledger technology ensuring secure and transparent transactions.", emoji="⛓️", value="Blockchain"
+            ),
+            SelectOption(
+                label="Web3", description="Decentralized internet empowering users, cutting out middlemen. Join now!", emoji="🔒", value="Web3"
+            ),
+            SelectOption(
+                label="IoT", description="Connecting network of physical objects with internet to control database.", emoji="🖥️", value="IoT"
+            ),
+        }
+
+        super().__init__(placeholder="Select :", options=options)
+    
+    async def callback(self, inter: Interaction):
+        author = inter.user
+
+        doc_ref = db.collection("Discord_Users").document("Member Dev List")
         memberlist = []
 
         doc = doc_ref.get()
@@ -288,13 +353,17 @@ class TeamDropdown(Select):
             for id in discord_ids[self.values[0]]:
                 memberlist.append(id)
 
-        memberlist.append(f"{author.id}") # add user id here
-        
-        id_ref = db.collection("Discord_Users").document("Member Dev List")
-        data = {self.values[0]: memberlist}
-        id_ref.set(data, merge=True)
+        if str(author.id) in memberlist:
+            memberlist.remove(f"{author.id}") # add user id here
 
-        await inter.response.send_message(f"You have selected {self.values[0]}", ephemeral=True)
+            id_ref = db.collection("Discord_Users").document("Member Dev List")
+            data = {self.values[0]: memberlist}
+            id_ref.set(data, merge=True)
+
+            await inter.response.send_message(f"Okay! We have remove you from the Database !", ephemeral=True)
+
+        else:
+            await inter.response.send_message(f"You already don't exist in the Database !", ephemeral=True)
 
 class DropdownView(View):
     def __init__(self, dropdown: Select):

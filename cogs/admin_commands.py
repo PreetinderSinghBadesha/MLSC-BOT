@@ -39,9 +39,6 @@ class AdminCommands(commands.Cog):
         common_ids = member_ids_set.intersection(database_ids_set)
         common_names = member_username_set.intersection(database_ids_set)
 
-        print(common_ids)
-        print(common_names)
-
         team_role = get(guild.roles, name="Participant")
 
         for member_id in common_ids:
